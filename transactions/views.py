@@ -8,7 +8,9 @@ from django.db.models.functions import Coalesce
 from .models import Expense, Group, ExpenseSplit
 import requests
 from .serializers import ExpenseCreationSerializer
+from rest_framework.permissions import IsAuthenticated
 class ExpenseView(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self,request): 
         try:
             serializer = ExpenseCreationSerializer(data=request.data)
@@ -38,6 +40,7 @@ class ExpenseView(APIView):
 
             
 class GroupBalance(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, group_id):
         try:
             group = Group.objects.prefetch_related('users').get(id=group_id)
