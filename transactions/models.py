@@ -15,9 +15,13 @@ class Expense(models.Model):
     group = models.ForeignKey(Group,on_delete=models.CASCADE)
     currency_used = models.CharField(max_length=5)
     converted_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    
+    def __str__(self):
+        return f"{self.payer.username} paid {self.amount} {self.currency_used} for {self.group.name}"
 
 class ExpenseSplit(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
-    
+    def __str__(self):
+        return f"{self.user.username} owes {self.amount} for {self.expense}"
