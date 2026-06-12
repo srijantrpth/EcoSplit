@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from decimal import Decimal
 from django.db import transaction
+from django.db.models import Sum,Q
+from django.db.models.functions import Coalesce
 from .models import Expense, Group, ExpenseSplit
 import requests
 from .serializers import ExpenseCreationSerializer
@@ -35,6 +37,26 @@ class ExpenseView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
             
+class GroupBalance(APIView):
+    def get(self, request, group_id):
+        try:
+            group = Group.objects.prefetch_related('users').get(id=group_id)
+            users = group.users.all()            
+            annotated_users = users.annotate(
+                total_paid = Coalesce(Sum('expense__converted_amount',filter=Q(expense__group=group)), Decimal('0.00')),
+                total_owed = Coalesce(Sum('expensesplit__amount',filter=Q(expensesplit__expense__group=group)), Decimal('0.00'))
+            )
+            balances_list = []
 
-       
+            for user in annotated_users:
+                user.balance = user.total_paid - user.total_owed
+                balances_list.append({
+                    "user_id": user.id,
+                    "balance": user.balance
+                })        
+            return Response({"group_name": group.name, "base_currency":group.base_currency, "balances": balances_list}, status=status.HTTP_201_CREATED)
+        except Group.DoesNotExist:
+            return Response({"error":"Group does not exist! "},status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error":str(e)},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
       

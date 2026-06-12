@@ -15,9 +15,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
-
+from django.urls import path
+from .views import ExpenseView, GroupBalance
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/transactions/',include('transaction.urls'))
+    path('expense-view/',ExpenseView.as_view(),name='expense-view' ),
+    path('groups/<int:group_id>/balances/', GroupBalance.as_view(),name='group-balance')
+    
 ]
